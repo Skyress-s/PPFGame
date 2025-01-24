@@ -3,6 +3,7 @@
 
 #include "PPFPlayerPawn.h"
 
+#include "EnhancedInputComponent.h"
 
 // Sets default values
 APPFPlayerPawn::APPFPlayerPawn() {
@@ -24,5 +25,7 @@ void APPFPlayerPawn::Tick(float DeltaTime) {
 // Called to bind functionality to input
 void APPFPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
+	}
 }
 
