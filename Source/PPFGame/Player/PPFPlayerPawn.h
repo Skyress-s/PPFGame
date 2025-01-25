@@ -42,11 +42,16 @@ public:
 
 private:
 #pragma region PrivateMethods
+	// Input
 	void OnMoveInput(const FInputActionValue& InputActionValue);
 	void OnJumpInput(const FInputActionValue& InputActionValue);
 	void OnPastInput(const FInputActionValue& InputActionValue);
 	void OnFutureInput(const FInputActionValue& InputActionValue);
 
+	// Movement
+	void HandlePhysMat();
+	void HandleMovement();
+	
 #pragma endregion
 private:
 #pragma region PrivateFields
@@ -70,5 +75,11 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gravity")
 	TObjectPtr<UGravityComponent> m_GravityComponent {};
+
+
+	struct
+	{
+		float m_MoveInputX {};
+	};
 #pragma endregion
 };

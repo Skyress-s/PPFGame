@@ -16,6 +16,8 @@
 #include "PPFGame/Gravity/GravityComponent.h"
 #include "PPFGame/Selection/SelectableInterface.h"
 #include "PPFGame/Selection/SelectionUtils.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(LogPPFPlayerPawn, Log, All);
 
@@ -24,6 +26,7 @@ APPFPlayerPawn::APPFPlayerPawn()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickGroup = TG_PrePhysics;
 	
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -45,6 +48,9 @@ APPFPlayerPawn::APPFPlayerPawn()
 	m_AbilitySphere->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 
 	m_GravityComponent = CreateDefaultSubobject<UGravityComponent>(TEXT("GravityComponent"));
+
+	
+	
 }
 
 // Called when the game starts or when spawned
@@ -76,6 +82,8 @@ void APPFPlayerPawn::BeginPlay()
 void APPFPlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	HandlePhysMat();
+	HandleMovement();
 }
 
 // Called to bind functionality to input
@@ -88,6 +96,7 @@ void APPFPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		check(IsValid(m_InputConfig))
 
 		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Triggered, this, &APPFPlayerPawn::OnMoveInput);
+		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnMoveInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_JumpInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnJumpInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_FutureInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnFutureInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_PastInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnPastInput);
@@ -120,11 +129,11 @@ bool APPFPlayerPawn::IsCharacterGrounded() const
 
 void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 {
-	FVector2D Input = InputActionValue.Get<FVector2D>();
+	m_MoveInputX = InputActionValue.Get<FVector2D>().X;
+	
 
-	m_RootCapsuleComponent->AddForce(FVector(-Input.X, 0, 0) * 1000, NAME_None, true);
 
-	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", Input.ToString());
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", m_MoveInputX);
 }
 
 void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
@@ -170,4 +179,34 @@ void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 void APPFPlayerPawn::OnFutureInput(const FInputActionValue& InputActionValue)
 {
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Future input!");
+}
+
+void APPFPlayerPawn::HandlePhysMat()
+{
+	if (IsCharacterGrounded())
+	{
+		m_RootCapsuleComponent->SetPhysMaterialOverride(m_PlayerStats->m_GlidePhysMat);
+	}
+	else
+	{
+		m_RootCapsuleComponent->SetPhysMaterialOverride(m_PlayerStats->m_StickPhysMat);
+	}
+}
+
+void APPFPlayerPawn::HandleMovement()
+{
+	if (!IsCharacterGrounded() && FMath::IsNearlyZero(m_MoveInputX))
+	{
+		return;
+	}
+	const float TargetSpeed = -m_MoveInputX * m_PlayerStats->m_MovementGroundedMaxSpeed;
+	const float CurrentSpeed = m_RootCapsuleComponent->GetComponentVelocity().X;
+
+	const float Diff = TargetSpeed - CurrentSpeed;
+
+	
+	const float Acceleration = Diff * m_PlayerStats->m_MovementAcceleration;
+	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Acceleration {Acceleration}", Acceleration);
+	
+	m_RootCapsuleComponent->AddForce(FVector(Acceleration, 0, 0), NAME_None, true);
 }
