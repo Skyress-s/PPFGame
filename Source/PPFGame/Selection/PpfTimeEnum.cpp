@@ -3,7 +3,8 @@
 
 #include "PpfTimeEnum.h"
 
-ETimeMode GetNextState(const ETimeMode Current, const ETimeMode Applied)
+
+ETimeMode TimeMode::GetNextState(const ETimeMode Current, const ETimeMode Applied)
 {
 	if (Current == Applied) {
 		return ETimeMode::Present;

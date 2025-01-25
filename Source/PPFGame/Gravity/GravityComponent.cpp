@@ -21,7 +21,6 @@ void UGravityComponent::BeginPlay()
 	Super::BeginPlay();
 	PrimaryComponentTick.TickGroup = ETickingGroup::TG_PrePhysics;
 	// ...
-	
 }
 
 
@@ -30,7 +29,15 @@ void UGravityComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	Cast<UPrimitiveComponent>( GetOwner()->GetRootComponent())->AddForce(FVector(m_Gravity, 0), NAME_None, true);
+	TObjectPtr<UPrimitiveComponent> PrimitiveComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+	if (IsValid(PrimitiveComponent))
+	{
+		if (PrimitiveComponent->IsSimulatingPhysics())
+		{
+			PrimitiveComponent->AddForce(FVector(m_Gravity, 0), NAME_None, true);
+		}
+	}
+
 	// ...
 }
 
@@ -38,4 +45,3 @@ void UGravityComponent::SetGravity(const FVector2D& Gravity)
 {
 	m_Gravity = Gravity;
 }
-

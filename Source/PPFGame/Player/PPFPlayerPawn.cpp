@@ -110,7 +110,7 @@ void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& Proper
 	m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
 }
 
-bool APPFPlayerPawn::IsCharacterGrounded() const
+bool APPFPlayerPawn::IsCharacterGrounded()
 {
 	FHitResult HitResult;
 	const float HalfHeight = m_RootCapsuleComponent->GetScaledCapsuleHalfHeight();
@@ -120,8 +120,16 @@ bool APPFPlayerPawn::IsCharacterGrounded() const
 	const FVector End = BottomOfCapsule + Down * m_PlayerStats->m_GroundCheckDistance;
 	FCollisionQueryParams CollisionQueryParams = FCollisionQueryParams::DefaultQueryParam;
 	CollisionQueryParams.AddIgnoredActor(this);
-	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionQueryParams);
-	DrawDebugLineTraceSingle(GetWorld(), Start, End, EDrawDebugTrace::ForDuration, HitResult.bBlockingHit, HitResult, FLinearColor::Red, FLinearColor::Green, 1.0f);
+	
+	TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
+	TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
+	TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+	TArray<AActor*> ActorsToIgnore {this};
+	UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), BottomOfCapsule, Start, m_RootCapsuleComponent->GetScaledCapsuleRadius() * 0.8f, TraceObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::None, HitResult, true);
+	
+	// GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionQueryParams);
+	// DrawDebugLineTraceSingle(GetWorld(), Start, End, EDrawDebugTrace::ForDuration, HitResult.bBlockingHit, HitResult, FLinearColor::Red, FLinearColor::Green, 1.0f);
+	
 	return HitResult.bBlockingHit;
 }
 #endif
@@ -191,6 +199,12 @@ void APPFPlayerPawn::OnFutureInput(const FInputActionValue& InputActionValue)
 
 void APPFPlayerPawn::HandlePhysMat()
 {
+	if (IsCharacterGrounded() && FMath::IsNearlyZero(m_MoveInputX))
+	{
+		m_RootCapsuleComponent->SetPhysMaterialOverride(m_PlayerStats->m_StickPhysMat);
+		return;
+	}
+	
 	if (IsCharacterGrounded())
 	{
 		m_RootCapsuleComponent->SetPhysMaterialOverride(m_PlayerStats->m_GlidePhysMat);

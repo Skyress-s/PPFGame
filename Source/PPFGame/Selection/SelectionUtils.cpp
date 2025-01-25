@@ -23,9 +23,9 @@ TArray<ISelectableInterface*> USelectionUtils::QuerySelectableObjectsInCone(cons
 	{
 		if (ActorToTest->Implements<USelectableInterface>())
 		{
-			FVector FromTo = (ActorToTest->GetActorLocation() - SphereCenter);
+			FVector2D FromTo = FVector2D(ActorToTest->GetActorLocation() - SphereCenter);
 			
-			float Angle = UMathUtility::AngleVectors(FromTo, FVector(Direction, 0));
+			float Angle = UMathUtility::AngleVectors(FVector(FromTo, 0), FVector(Direction, 0));
 			if (Angle <= Degrees/2.0f)
 			{
 				SelectableObjectsFound.Add(Cast<ISelectableInterface>(ActorToTest));

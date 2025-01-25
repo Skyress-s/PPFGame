@@ -41,7 +41,7 @@ protected:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 public:
-	bool IsCharacterGrounded() const;
+	bool IsCharacterGrounded();
 
 private:
 #pragma region PrivateMethods
