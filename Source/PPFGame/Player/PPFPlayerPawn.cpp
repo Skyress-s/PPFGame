@@ -107,9 +107,12 @@ bool APPFPlayerPawn::IsCharacterGrounded() const
 	FHitResult HitResult;
 	const float HalfHeight = m_RootCapsuleComponent->GetScaledCapsuleHalfHeight();
 	const FVector Down = m_RootCapsuleComponent->GetUpVector() * -1.0f;
-	const FVector Start = m_RootCapsuleComponent->GetComponentLocation() + (Down * HalfHeight);
-	const FVector End = Start + Down * m_PlayerStats->m_GroundCheckDistance;
-	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldStatic);
+	const FVector BottomOfCapsule = m_RootCapsuleComponent->GetComponentLocation() + (Down * HalfHeight);
+	const FVector Start = BottomOfCapsule - Down * m_RootCapsuleComponent->GetScaledCapsuleHalfHeight() * 0.1f;
+	const FVector End = BottomOfCapsule + Down * m_PlayerStats->m_GroundCheckDistance;
+	FCollisionQueryParams CollisionQueryParams = FCollisionQueryParams::DefaultQueryParam;
+	CollisionQueryParams.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionQueryParams);
 	DrawDebugLineTraceSingle(GetWorld(), Start, End, EDrawDebugTrace::ForDuration, HitResult.bBlockingHit, HitResult, FLinearColor::Red, FLinearColor::Green, 1.0f);
 	return HitResult.bBlockingHit;
 }
