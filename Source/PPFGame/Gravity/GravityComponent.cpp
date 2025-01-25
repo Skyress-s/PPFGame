@@ -34,3 +34,8 @@ void UGravityComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	// ...
 }
 
+void UGravityComponent::SetGravity(const FVector2D& Gravity)
+{
+	m_Gravity = Gravity;
+}
+

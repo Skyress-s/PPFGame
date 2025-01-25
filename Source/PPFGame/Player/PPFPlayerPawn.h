@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "PPFPlayerPawn.generated.h"
 
+class UGravityComponent;
 class UPpfPawnStats;
 class USphereComponent;
 class UCapsuleComponent;
@@ -36,6 +37,8 @@ protected:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
+public:
+	bool IsCharacterGrounded() const;
 
 private:
 #pragma region PrivateMethods
@@ -64,7 +67,8 @@ private:
 	// Defines the range of the character
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	TObjectPtr<USphereComponent> m_AbilitySphere {};
-	
-	
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gravity")
+	TObjectPtr<UGravityComponent> m_GravityComponent {};
 #pragma endregion
 };

@@ -5,6 +5,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "KismetTraceUtils.h"
 #include "PPFPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -12,6 +13,7 @@
 #include "Config/PpfPawnStats.h"
 #include "PPFGame/Input/PPFPlayerInputConfig.h"
 #include "Logging/StructuredLog.h"
+#include "PPFGame/Gravity/GravityComponent.h"
 #include "PPFGame/Selection/SelectableInterface.h"
 #include "PPFGame/Selection/SelectionUtils.h"
 
@@ -22,12 +24,14 @@ APPFPlayerPawn::APPFPlayerPawn()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
+	// Components
 	m_RootCapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
-	m_RootCapsuleComponent->SetConstraintMode(EDOFMode::Type::SixDOF);
-	m_RootCapsuleComponent->BodyInstance.bLockRotation = true;
-	m_RootCapsuleComponent->BodyInstance.bLockZRotation = true;
-
+	m_RootCapsuleComponent->GetBodyInstance()->SetDOFLock(EDOFMode::Type::SixDOF);
+	m_RootCapsuleComponent->GetBodyInstance()->bLockRotation = true;
+	m_RootCapsuleComponent->GetBodyInstance()->bLockZTranslation = true;
 
 	m_RootCapsuleComponent->SetSimulatePhysics(true);
 	m_RootCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -39,6 +43,8 @@ APPFPlayerPawn::APPFPlayerPawn()
 	m_AbilitySphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	m_AbilitySphere->SetupAttachment(GetRootComponent());
 	m_AbilitySphere->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+
+	m_GravityComponent = CreateDefaultSubobject<UGravityComponent>(TEXT("GravityComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -95,6 +101,18 @@ void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& Proper
 
 	m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
 }
+
+bool APPFPlayerPawn::IsCharacterGrounded() const
+{
+	FHitResult HitResult;
+	const float HalfHeight = m_RootCapsuleComponent->GetScaledCapsuleHalfHeight();
+	const FVector Down = m_RootCapsuleComponent->GetUpVector() * -1.0f;
+	const FVector Start = m_RootCapsuleComponent->GetComponentLocation() + (Down * HalfHeight);
+	const FVector End = Start + Down * m_PlayerStats->m_GroundCheckDistance;
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_WorldStatic);
+	DrawDebugLineTraceSingle(GetWorld(), Start, End, EDrawDebugTrace::ForDuration, HitResult.bBlockingHit, HitResult, FLinearColor::Red, FLinearColor::Green, 1.0f);
+	return HitResult.bBlockingHit;
+}
 #endif
 
 void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
@@ -110,7 +128,10 @@ void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 {
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Jump input!");
 	check(IsValid(m_PlayerStats))
-	m_RootCapsuleComponent->AddImpulse(FVector::YAxisVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+	if (IsCharacterGrounded())
+	{
+		m_RootCapsuleComponent->AddImpulse(FVector::YAxisVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+	}
 }
 
 void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
