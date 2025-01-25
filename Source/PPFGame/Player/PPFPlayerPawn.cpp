@@ -195,15 +195,16 @@ void APPFPlayerPawn::HandlePhysMat()
 
 void APPFPlayerPawn::HandleMovement()
 {
+	// Lol no data driven design in this house :)
 	if (!IsCharacterGrounded() && FMath::IsNearlyZero(m_MoveInputX))
 	{
 		return;
 	}
+	
 	const float TargetSpeed = -m_MoveInputX * m_PlayerStats->m_MovementGroundedMaxSpeed;
 	const float CurrentSpeed = m_RootCapsuleComponent->GetComponentVelocity().X;
 
 	const float Diff = TargetSpeed - CurrentSpeed;
-
 	
 	const float Acceleration = Diff * m_PlayerStats->m_MovementAcceleration;
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Acceleration {Acceleration}", Acceleration);

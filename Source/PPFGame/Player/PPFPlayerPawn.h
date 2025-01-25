@@ -76,7 +76,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Gravity")
 	TObjectPtr<UGravityComponent> m_GravityComponent {};
 
-
 	struct
 	{
 		float m_MoveInputX {};
