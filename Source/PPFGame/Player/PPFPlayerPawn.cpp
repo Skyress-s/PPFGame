@@ -5,6 +5,9 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "PPFGame/Input/PPFPlayerInputConfig.h"
 #include "Logging/StructuredLog.h"
 
@@ -14,6 +17,21 @@ DEFINE_LOG_CATEGORY_STATIC(LogPPFPlayerPawn, Log, All);
 APPFPlayerPawn::APPFPlayerPawn() {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	m_RootCapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+	m_RootCapsuleComponent->SetConstraintMode(EDOFMode::Type::SixDOF);
+	m_RootCapsuleComponent->SetConstraintMode()
+	
+	m_RootCapsuleComponent->SetSimulatePhysics(true);
+	m_RootCapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	
+	SetRootComponent(m_RootCapsuleComponent);
+	m_CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));		
+	m_CameraComponent->SetupAttachment(GetRootComponent());
+
+	m_AbilitySphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	m_AbilitySphere->SetupAttachment(GetRootComponent());
+	m_AbilitySphere->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 }
 
 // Called when the game starts or when spawned
@@ -40,18 +58,40 @@ void APPFPlayerPawn::Tick(float DeltaTime) {
 void APPFPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
-		check(IsValid(EnhancedInputComponent));
-		for (const FInputActionEntry& InputEntry : m_InputConfig->m_InputActionsEntries) {
-			const UInputAction* InputActionToBind = InputEntry.m_InputAction;
-			
-			EnhancedInputComponent->BindAction(InputActionToBind, ETriggerEvent::Triggered, this, &APPFPlayerPawn::OnMoveInput);
-		}
+		check(IsValid(EnhancedInputComponent))
+		check(IsValid(m_InputConfig))
+		
+		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Triggered, this, &APPFPlayerPawn::OnMoveInput);
+		EnhancedInputComponent->BindAction(m_InputConfig->m_FutureInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnFutureInput);
+		EnhancedInputComponent->BindAction(m_InputConfig->m_PastInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnPastInput);
+		
 	}
 }
+
+#if WITH_EDITOR
+void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
+}
+#endif
 
 void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue) {
 	FVector2D Input = InputActionValue.Get<FVector2D>();
 
-	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", Input);
+	m_RootCapsuleComponent->AddForce(FVector(Input.X, Input.Y, 0) * 1000, NAME_None, true);
+	
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", Input.ToString());
+}
+
+void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
+{
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Past input!");
+}
+
+void APPFPlayerPawn::OnFutureInput(const FInputActionValue& InputActionValue)
+{
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Future input!");
 }
 

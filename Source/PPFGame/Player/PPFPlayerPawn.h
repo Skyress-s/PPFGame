@@ -7,6 +7,9 @@
 #include "GameFramework/Pawn.h"
 #include "PPFPlayerPawn.generated.h"
 
+class USphereComponent;
+class UCapsuleComponent;
+class UCameraComponent;
 class UPPFPlayerInputConfig;
 
 UCLASS()
@@ -28,16 +31,35 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+protected:
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
 private:
 #pragma region PrivateMethods
 	void OnMoveInput(const FInputActionValue& InputActionValue);
+	void OnPastInput(const FInputActionValue& InputActionValue);
+	void OnFutureInput(const FInputActionValue& InputActionValue);
 
 #pragma endregion
 private:
 #pragma region PrivateFields
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UPPFPlayerInputConfig> m_InputConfig {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Camera")
+	TObjectPtr<UCameraComponent> m_CameraComponent {};
+
+	// Root comp
+	UPROPERTY(EditDefaultsOnly, Category = "Body")
+	TObjectPtr<UCapsuleComponent> m_RootCapsuleComponent {};
+
+	// Defines the range of the character
+	UPROPERTY(EditDefaultsOnly, Category = "Ability")
+	TObjectPtr<USphereComponent> m_AbilitySphere {};
+	
+	
 #pragma endregion
 };
