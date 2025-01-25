@@ -13,9 +13,9 @@ class UBoxComponent;
 
 enum class EWallDetectionSide : uint8
 {
-	None = 0 << 0,
-	Left = 0 << 1,
-	Right = 0 << 2,
+	None = 1 << 0,
+	Left = 1 << 1,
+	Right = 1 << 2,
 };
 
 class UGravityComponent;
@@ -115,7 +115,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Art", meta = (AllowPrivateAccess = "true"))
 	UMaterialParameterCollection* m_MaterialParameterCollection {};
 
-	// todo is this oaky?
+	// todo This is very memory safe. Because i have hope.
 	TMap<AActor*, FDelegateHandle> m_FutureDetectionHandles {};
 
 	struct

@@ -22,6 +22,7 @@
 #include "PPFGame/Selection/PpfTimeEnum.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "PPFGame/Debug/DebuggingDefines.h"
+#include "PPFGame/Math/MathUtility.h"
 #include "PPFGame/PpfObject/FutureNotifier.h"
 
 
@@ -100,6 +101,7 @@ void APPFPlayerPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	HandlePhysMat();
 	HandleMovement();
+	UpdateMpcHaha();
 }
 
 // Called to bind functionality to input
@@ -201,12 +203,15 @@ void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 	{
 		if ((WallSide & (uint8)EWallDetectionSide::Left) == (uint8)EWallDetectionSide::Left)
 		{
-			m_RootCapsuleComponent->AddImpulse(FVector::ForwardVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+			const FVector WallJumpVector = (-FVector::ForwardVector + FVector::YAxisVector).GetSafeNormal();
+			m_RootCapsuleComponent->AddImpulse(WallJumpVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
 		}
 		if ((WallSide & (uint8)EWallDetectionSide::Right) == (uint8)EWallDetectionSide::Right)
 		{
-			m_RootCapsuleComponent->AddImpulse(-FVector::ForwardVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+			const FVector WallJumpVector = (FVector::ForwardVector + FVector::YAxisVector).GetSafeNormal();
+			m_RootCapsuleComponent->AddImpulse(WallJumpVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
 		}
+		
 		return;
 	}
 	
@@ -224,6 +229,7 @@ void APPFPlayerPawn::OnResetInput(const FInputActionValue& InputActionValue)
 void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 {
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Past input!");
+
 
 	TraceTest(ETimeMode::Past);
 }
@@ -295,6 +301,7 @@ void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 	FVector FoundLocation = FMath::RayPlaneIntersection(m_CameraComponent->GetComponentLocation(), Direction, FPlane(FVector::ZeroVector, FVector::UpVector));
 
 	const FVector ToMouse = FoundLocation - GetActorLocation();
+
 
 #ifdef PPF_DEBUG_TRACES
 	DrawDebugBox(GetWorld(), FoundLocation, FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
@@ -382,5 +389,14 @@ void APPFPlayerPawn::UpdateMpcHaha()
 	FVector FoundLocation = FMath::RayPlaneIntersection(m_CameraComponent->GetComponentLocation(), Direction, FPlane(FVector::ZeroVector, FVector::UpVector));
 
 	const FVector ToMouse = FoundLocation - GetActorLocation();
-	GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection)->SetVectorParameterValue("", ToMouse);
+
+	// Arian, if we want to reverse set the -FVector::UpVector to FVector::UpVector.
+	float Angle = UMathUtility::AngleVectorsSigned(ToMouse, FVector::ForwardVector, -FVector::UpVector);
+	if (Angle < 0)
+	{
+		Angle += 360.0f;
+	}
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Angle {Angle}", Angle);
+	
+	GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection)->SetScalarParameterValue("AimAngle", Angle);
 }
