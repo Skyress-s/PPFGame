@@ -82,7 +82,7 @@ void APPFPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		check(IsValid(m_InputConfig))
 
 		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Triggered, this, &APPFPlayerPawn::OnMoveInput);
-		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnJumpInput);
+		EnhancedInputComponent->BindAction(m_InputConfig->m_JumpInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnJumpInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_FutureInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnFutureInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_PastInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnPastInput);
 	}
@@ -101,7 +101,7 @@ void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 {
 	FVector2D Input = InputActionValue.Get<FVector2D>();
 
-	m_RootCapsuleComponent->AddForce(FVector(Input.X, 0, 0) * 1000, NAME_None, true);
+	m_RootCapsuleComponent->AddForce(FVector(-Input.X, 0, 0) * 1000, NAME_None, true);
 
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", Input.ToString());
 }
