@@ -16,6 +16,7 @@
 #include "PPFGame/Gravity/GravityComponent.h"
 #include "PPFGame/Selection/SelectableInterface.h"
 #include "PPFGame/Selection/SelectionUtils.h"
+#include "PPFGame/Selection/PpfTimeEnum.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 
 
@@ -168,7 +169,7 @@ void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 		const bool ValidSelect = SelectableInterface->TrySelect();
 		if (ValidSelect)
 		{
-			SelectableInterface->OnSelect(EPpfTime::Past);
+			SelectableInterface->OnSelect(EPpfTime::EType:: );
 		}
 		
 		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(1000, 10, 10), FColor::Red, false, 1.f, 0, 10.0f);
@@ -207,6 +208,7 @@ void APPFPlayerPawn::HandleMovement()
 	const float Diff = TargetSpeed - CurrentSpeed;
 	
 	const float Acceleration = Diff * m_PlayerStats->m_MovementAcceleration;
+	
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Acceleration {Acceleration}", Acceleration);
 	
 	m_RootCapsuleComponent->AddForce(FVector(Acceleration, 0, 0), NAME_None, true);

@@ -22,6 +22,8 @@ bool ARock::TrySelect()
 EPpfTime ARock::OnSelect(const EPpfTime Time)
 {
 	UE_LOGFMT(LogRock, Log, "Rock Was Selected");
+
+	
 	return EPpfTime::Present;
 }
 

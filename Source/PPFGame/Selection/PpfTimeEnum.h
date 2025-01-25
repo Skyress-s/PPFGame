@@ -4,14 +4,28 @@
 
 #include "CoreMinimal.h"
 
+namespace EPpfTime {
 /**
  * 
  */
 UENUM(BlueprintType)
-enum class EPpfTime : uint8
+enum class EType : uint8
 {
 	None UMETA(DisplayName = "None"),
 	Future UMETA(DisplayName = "Future"),
 	Present UMETA(DisplayName = "Present"),
 	Past UMETA(DisplayName = "Past")
 };
+
+
+
+// Return the next state.
+EType GetNextState(const EType Current, const EType Applied) {
+	if (Current == Applied) {
+		return EType::Present;
+	}
+
+	return Applied;
+}
+	
+}

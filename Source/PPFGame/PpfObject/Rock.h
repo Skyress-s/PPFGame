@@ -24,4 +24,6 @@ public:
 
 	EPpfTime OnSelect(const EPpfTime Time);
 	// ISelectableInterface END
+public:
+	EPpfTime m_CurrentPpfTime = EPpfTime::Present;
 };
