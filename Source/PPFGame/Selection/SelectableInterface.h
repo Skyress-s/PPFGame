@@ -26,5 +26,5 @@ public:
 	// Checks if the object can be selected.
 	virtual bool TrySelect(){ return false; }
 
-	EPpfTime::EType OnSelect(const EPpfTime::EType Time) { return EPpfTime::EType::None; }
+	ETimeMode OnSelect(const ETimeMode Time) { return ETimeMode::None; }
 };

@@ -20,8 +20,8 @@ public:
 	// Checks if the object can be selected.
 	virtual bool TrySelect();
 
-	EPpfTime::EType OnSelect(const EPpfTime::EType Time);
+	ETimeMode OnSelect(const ETimeMode Time);
 	// ISelectableInterface END
 public:
-	EPpfTime::EType m_CurrentPpfTime = EPpfTime::EType::Present;
+	ETimeMode m_CurrentPpfTime = ETimeMode::Present;
 };

@@ -3,10 +3,10 @@
 
 #include "PpfTimeEnum.h"
 
-EPpfTime::EType EPpfTime::GetNextState(const EType Current, const EType Applied)
+ETimeMode GetNextState(const ETimeMode Current, const ETimeMode Applied)
 {
 	if (Current == Applied) {
-		return EType::Present;
+		return ETimeMode::Present;
 	}
 
 	return Applied;

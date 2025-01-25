@@ -18,6 +18,7 @@
 #include "PPFGame/Selection/SelectionUtils.h"
 #include "PPFGame/Selection/PpfTimeEnum.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+#include "PPFGame/Debug/DebuggingDefines.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogPPFPlayerPawn, Log, All);
@@ -28,7 +29,7 @@ APPFPlayerPawn::APPFPlayerPawn()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickGroup = TG_PrePhysics;
-	
+
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
 	// Components
@@ -49,9 +50,6 @@ APPFPlayerPawn::APPFPlayerPawn()
 	m_AbilitySphere->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 
 	m_GravityComponent = CreateDefaultSubobject<UGravityComponent>(TEXT("GravityComponent"));
-
-	
-	
 }
 
 // Called when the game starts or when spawned
@@ -131,7 +129,6 @@ bool APPFPlayerPawn::IsCharacterGrounded() const
 void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 {
 	m_MoveInputX = InputActionValue.Get<FVector2D>().X;
-	
 
 
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", m_MoveInputX);
@@ -147,10 +144,8 @@ void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 	}
 }
 
-void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
+void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 {
-	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Past input!");
-
 	TObjectPtr<APPFPlayerController> PpfPlayerController = Cast<APPFPlayerController>(GetController());
 	FVector Direction, Location;
 	PpfPlayerController->DeprojectMousePositionToWorld(Location, Direction);
@@ -158,8 +153,10 @@ void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 	FVector FoundLocation = FMath::RayPlaneIntersection(m_CameraComponent->GetComponentLocation(), Direction, FPlane(FVector::ZeroVector, FVector::UpVector));
 
 	const FVector ToMouse = FoundLocation - GetActorLocation();
-	// DrawDebugLine(GetWorld(), FoundLocation, FoundLocation + FVector(0, 0, 1000), FColor::Red, true, 4.f, 0, 10.0f);
+
+#ifdef PPF_DEBUG_TRACES
 	DrawDebugBox(GetWorld(), FoundLocation, FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
+#endif
 
 	TArray<ISelectableInterface*> SelectableInterfaces = USelectionUtils::QuerySelectableObjectsInCone(*this, FVector2D(GetActorLocation()), FVector2D(ToMouse), 30.0f, 500.0f);
 	for (ISelectableInterface* const SelectableInterface : SelectableInterfaces)
@@ -169,17 +166,27 @@ void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 		const bool ValidSelect = SelectableInterface->TrySelect();
 		if (ValidSelect)
 		{
-			SelectableInterface->OnSelect(EPpfTime::EType::Past);
+			const ETimeMode SetTimeMode = SelectableInterface->OnSelect(TimeModeToApply);
+			m_OnUseAbility.Broadcast(FVector2D(Direction), SetTimeMode);
 		}
-		
+
+#if PPF_DEBUG_TRACES
 		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(1000, 10, 10), FColor::Red, false, 1.f, 0, 10.0f);
+#endif
 	}
-	
+}
+
+void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
+{
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Past input!");
+
+	TraceTest(ETimeMode::Past);
 }
 
 void APPFPlayerPawn::OnFutureInput(const FInputActionValue& InputActionValue)
 {
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Future input!");
+	TraceTest(ETimeMode::Future);
 }
 
 void APPFPlayerPawn::HandlePhysMat()
@@ -201,15 +208,15 @@ void APPFPlayerPawn::HandleMovement()
 	{
 		return;
 	}
-	
+
 	const float TargetSpeed = -m_MoveInputX * m_PlayerStats->m_MovementGroundedMaxSpeed;
 	const float CurrentSpeed = m_RootCapsuleComponent->GetComponentVelocity().X;
 
 	const float Diff = TargetSpeed - CurrentSpeed;
-	
+
 	const float Acceleration = Diff * m_PlayerStats->m_MovementAcceleration;
-	
+
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Acceleration {Acceleration}", Acceleration);
-	
+
 	m_RootCapsuleComponent->AddForce(FVector(Acceleration, 0, 0), NAME_None, true);
 }

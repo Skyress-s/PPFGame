@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
+#include "PPFGame/Selection/PpfTimeEnum.h"
 #include "PPFPlayerPawn.generated.h"
 
 class UGravityComponent;
@@ -13,6 +14,8 @@ class USphereComponent;
 class UCapsuleComponent;
 class UCameraComponent;
 class UPPFPlayerInputConfig;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUseAbility, const FVector2D&, Direction, ETimeMode, TimeMode);
 
 UCLASS()
 class PPFGAME_API APPFPlayerPawn : public APawn {
@@ -45,6 +48,7 @@ private:
 	// Input
 	void OnMoveInput(const FInputActionValue& InputActionValue);
 	void OnJumpInput(const FInputActionValue& InputActionValue);
+	void TraceTest(ETimeMode TimeModeToApply);
 	void OnPastInput(const FInputActionValue& InputActionValue);
 	void OnFutureInput(const FInputActionValue& InputActionValue);
 
@@ -53,6 +57,9 @@ private:
 	void HandleMovement();
 	
 #pragma endregion
+public:
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnUseAbility m_OnUseAbility;
 private:
 #pragma region PrivateFields
 	
