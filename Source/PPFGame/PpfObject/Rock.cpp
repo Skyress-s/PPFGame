@@ -3,6 +3,7 @@
 
 #include "Rock.h"
 
+#include "FutureNotifier.h"
 #include "Components/BoxComponent.h"
 #include "Logging/StructuredLog.h"
 #include "PPFGame/Gravity/GravityComponent.h"
@@ -21,6 +22,7 @@ ARock::ARock()
 	
 	SetRootComponent(m_RootBoxComponent);
 
+	m_FutureNotifier = CreateDefaultSubobject<UFutureNotifier>(TEXT("FutureNotifier"));
 
 	m_GravityComponent = CreateDefaultSubobject<UGravityComponent>(TEXT("GravityComponent"));
 }
@@ -52,6 +54,7 @@ ETimeMode ARock::OnSelect(const ETimeMode Time)
 		LeavePastTimeMode();
 		break;
 	}
+	
 	m_CurrentTimeMode = TimeMode::GetNextState(m_CurrentTimeMode, Time);
 
 	switch (m_CurrentTimeMode) {
@@ -84,6 +87,7 @@ void ARock::EnterToFutureTimeMode()
 {
 	m_RootBoxComponent->SetSimulatePhysics(true);
 	m_RootBoxComponent->SetPhysicsLinearVelocity(m_VelocityEnLeaveFuture);
+	m_FutureNotifier->m_OnEnterFuture.Broadcast(m_VelocityEnLeaveFuture);
 }
 
 void ARock::LeavePastTimeMode()

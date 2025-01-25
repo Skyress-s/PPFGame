@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Pawn.h"
+#include "PPFGame/PpfObject/FutureNotifier.h"
 #include "PPFGame/Selection/PpfTimeEnum.h"
 #include "PPFPlayerPawn.generated.h"
 
@@ -67,7 +68,8 @@ private:
 	void HandleMovement();
 	
 	void TraceTest(ETimeMode TimeModeToApply);
-	
+
+	void OnAdjecentObjectEnterFuture(const FVector& Vector);
 	UFUNCTION()
 	void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
@@ -99,6 +101,9 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Body")
 	TObjectPtr<UBoxComponent> m_RightBoxQueryBox {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Body")
+	TObjectPtr<UBoxComponent> m_EnterFutureDetectionRange {};
 
 	// Defines the range of the character
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
@@ -109,6 +114,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Art", meta = (AllowPrivateAccess = "true"))
 	UMaterialParameterCollection* m_MaterialParameterCollection {};
+
+	// todo is this oaky?
+	TMap<AActor*, FDelegateHandle> m_FutureDetectionHandles {};
 
 	struct
 	{
