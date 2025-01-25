@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "PPFController.generated.h"
+#include "PPFPlayerController.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PPFGAME_API APPFController : public APlayerController {
+class PPFGAME_API APPFPlayerController : public APlayerController {
 	GENERATED_BODY()
 };
