@@ -7,6 +7,7 @@
 #include "PPFGame/Selection/SelectableInterface.h"
 #include "Rock.generated.h"
 
+class UFutureNotifier;
 class UGravityComponent;
 class UBoxComponent;
 
@@ -43,6 +44,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Gravity")
 	TObjectPtr<UGravityComponent> m_GravityComponent {};
+	
+	UPROPERTY(EditAnywhere, Category = "FutureNotifier")
+	TObjectPtr<UFutureNotifier> m_FutureNotifier {};
 private:
 	ETimeMode m_CurrentTimeMode = ETimeMode::Present;
 	UPROPERTY(EditAnywhere, Category = "Velocity", meta = (AllowPrivateAccess = "true"))

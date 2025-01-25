@@ -22,6 +22,7 @@
 #include "PPFGame/Selection/PpfTimeEnum.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "PPFGame/Debug/DebuggingDefines.h"
+#include "PPFGame/PpfObject/FutureNotifier.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogPPFPlayerPawn, Log, All);
@@ -59,6 +60,9 @@ APPFPlayerPawn::APPFPlayerPawn()
 
 	m_RightBoxQueryBox = CreateDefaultSubobject<UBoxComponent>(TEXT("RightBoxQueryBox"));
 	m_RightBoxQueryBox->SetupAttachment(GetRootComponent());
+
+	m_EnterFutureDetectionRange = CreateDefaultSubobject<UBoxComponent>(TEXT("EnterFutureDetectionRange"));
+	m_EnterFutureDetectionRange->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -86,10 +90,8 @@ void APPFPlayerPawn::BeginPlay()
 	}
 
 
-	m_RightBoxQueryBox->OnComponentBeginOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxBeginOverlap);
-	m_LeftBoxQueryBox->OnComponentBeginOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxBeginOverlap);
-	m_RightBoxQueryBox->OnComponentEndOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxEndOverlap);
-	m_LeftBoxQueryBox->OnComponentEndOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxEndOverlap);
+	m_EnterFutureDetectionRange->OnComponentBeginOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxBeginOverlap);
+	m_EnterFutureDetectionRange->OnComponentEndOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxEndOverlap);
 }
 
 // Called every frame
@@ -101,7 +103,7 @@ void APPFPlayerPawn::Tick(float DeltaTime)
 
 	
 
-	// IsCharacterWalled();
+	IsCharacterWalled();
 }
 
 // Called to bind functionality to input
@@ -233,12 +235,24 @@ void APPFPlayerPawn::HandlePhysMat()
 void APPFPlayerPawn::HandleMovement()
 {
 	// Lol no data driven design in this house :)
-	if (!IsCharacterGrounded() && FMath::IsNearlyZero(m_MoveInputX))
+
+	TArray<AActor*> blabla{};
+	m_FutureDetectionHandles.GenerateKeyArray(blabla);
+	FVector MaxSelectableActorVelocity = FVector::ZeroVector;
+	for (AActor* EnterFutureActor : blabla)
 	{
-		return;
+		UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(EnterFutureActor->GetRootComponent());
+		if (IsValid(PrimitiveComponent))
+		{
+			const FVector OtherVelocity = PrimitiveComponent->GetPhysicsLinearVelocity();
+			if (OtherVelocity.Length() > MaxSelectableActorVelocity.Length())
+			{
+				MaxSelectableActorVelocity = OtherVelocity;
+			}
+		}
 	}
 
-	const float TargetSpeed = -m_MoveInputX * m_PlayerStats->m_MovementGroundedMaxSpeed;
+	const float TargetSpeed = -m_MoveInputX * m_PlayerStats->m_MovementGroundedMaxSpeed + MaxSelectableActorVelocity.X;
 	const float CurrentSpeed = m_RootCapsuleComponent->GetComponentVelocity().X;
 
 	const float Diff = TargetSpeed - CurrentSpeed;
@@ -248,6 +262,7 @@ void APPFPlayerPawn::HandleMovement()
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Acceleration {Acceleration}", Acceleration);
 
 	m_RootCapsuleComponent->AddForce(FVector(Acceleration, 0, 0), NAME_None, true);
+	// m_RootCapsuleComponent->AddForce(FVector(-m_MoveInputX * m_PlayerStats->m_MovementAcceleration * 2, 0, 0), NAME_None, true);
 }
 void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 {
@@ -282,22 +297,41 @@ void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 	}
 }
 
+void APPFPlayerPawn::OnAdjecentObjectEnterFuture(const FVector& Vector)
+{
+	m_RootCapsuleComponent->AddImpulse(Vector * 1.0f, NAME_None, true);
+}
+
 void APPFPlayerPawn::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
-	const FHitResult& SweepResult)
+                                       const FHitResult& SweepResult)
 {
 	if (OtherActor == this)
 	{
 		return;
 	}
-	
+
+	UFutureNotifier* const Notifier = OtherActor->FindComponentByClass<UFutureNotifier>();
+	if (IsValid(Notifier))
+	{
+		auto test = Notifier->m_OnEnterFuture.AddUObject(this, &APPFPlayerPawn::OnAdjecentObjectEnterFuture);
+		m_FutureDetectionHandles.Add(OtherActor, test);
+	}
+	/*
 	if (OverlappedComponent == m_LeftBoxQueryBox)
 	{
+		UFutureNotifier* const Notifier = OtherActor->FindComponentByClass<UFutureNotifier>();
+		if (IsValid(Notifier))
+		{
+			Notifier->m_OnEnterFuture.AddUObject(this, &APPFPlayerPawn::OnAdjecentObjectEnterFuture);
+		}
 		UE_LOGFMT(LogPPFPlayerPawn, Error, "Left box overlap");
 	}
 	else if (OverlappedComponent == m_RightBoxQueryBox)
 	{
 		UE_LOGFMT(LogPPFPlayerPawn, Error, "Right box overlap");
+		Notifier->m_OnEnterFuture.AddUObject(this, &APPFPlayerPawn::OnAdjecentObjectEnterFuture);
 	}
+*/
 }
 
 void APPFPlayerPawn::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -307,6 +341,13 @@ void APPFPlayerPawn::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 		return;
 	}
 	
+	UFutureNotifier* const Notifier = OtherActor->FindComponentByClass<UFutureNotifier>();
+	if (IsValid(Notifier))
+	{
+		FDelegateHandle Handle;
+		m_FutureDetectionHandles.RemoveAndCopyValue(OtherActor, Handle);
+		Notifier->m_OnEnterFuture.Remove(Handle);
+	}
 }
 void APPFPlayerPawn::UpdateMpcHaha()
 {
