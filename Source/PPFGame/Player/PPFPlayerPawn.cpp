@@ -9,6 +9,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
+#include "Config/PpfPawnStats.h"
 #include "PPFGame/Input/PPFPlayerInputConfig.h"
 #include "Logging/StructuredLog.h"
 #include "PPFGame/Selection/SelectableInterface.h"
@@ -45,6 +46,7 @@ void APPFPlayerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	check(IsValid(m_PlayerStats))
 	// Unlock Mouse Cursor
 	TObjectPtr<APPFPlayerController> PpfPlayerController = Cast<APPFPlayerController>(GetController());
 	check(IsValid(PpfPlayerController))
@@ -80,6 +82,7 @@ void APPFPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		check(IsValid(m_InputConfig))
 
 		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Triggered, this, &APPFPlayerPawn::OnMoveInput);
+		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnJumpInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_FutureInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnFutureInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_PastInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnPastInput);
 	}
@@ -98,9 +101,16 @@ void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 {
 	FVector2D Input = InputActionValue.Get<FVector2D>();
 
-	m_RootCapsuleComponent->AddForce(FVector(Input.X, Input.Y, 0) * 1000, NAME_None, true);
+	m_RootCapsuleComponent->AddForce(FVector(Input.X, 0, 0) * 1000, NAME_None, true);
 
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", Input.ToString());
+}
+
+void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
+{
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Jump input!");
+	check(IsValid(m_PlayerStats))
+	m_RootCapsuleComponent->AddImpulse(FVector::YAxisVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
 }
 
 void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
@@ -113,16 +123,22 @@ void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 
 	FVector FoundLocation = FMath::RayPlaneIntersection(m_CameraComponent->GetComponentLocation(), Direction, FPlane(FVector::ZeroVector, FVector::UpVector));
 
-	const FVector ToMouse = Location - GetActorLocation();
+	const FVector ToMouse = FoundLocation - GetActorLocation();
 	// DrawDebugLine(GetWorld(), FoundLocation, FoundLocation + FVector(0, 0, 1000), FColor::Red, true, 4.f, 0, 10.0f);
 	DrawDebugBox(GetWorld(), FoundLocation, FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
 
-	TArray<ISelectableInterface*> haha = USelectionUtils::QuerySelectableObjectsInCone(*this, FVector2D(GetActorLocation()), FVector2D(ToMouse), 30.0f, 500.0f);
-	for (auto Haha : haha)
+	TArray<ISelectableInterface*> SelectableInterfaces = USelectionUtils::QuerySelectableObjectsInCone(*this, FVector2D(GetActorLocation()), FVector2D(ToMouse), 30.0f, 500.0f);
+	for (ISelectableInterface* const SelectableInterface : SelectableInterfaces)
 	{
-		AActor* FoundActor = Cast<AActor>(Haha);
+		const AActor* const FoundActor = Cast<AActor>(SelectableInterface);
+
+		const bool ValidSelect = SelectableInterface->TrySelect();
+		if (ValidSelect)
+		{
+			SelectableInterface->OnSelect(EPpfTime::Past);
+		}
 		
-		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
+		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(1000, 10, 10), FColor::Red, false, 1.f, 0, 10.0f);
 	}
 	
 }

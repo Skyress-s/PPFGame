@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "PPFPlayerPawn.generated.h"
 
+class UPpfPawnStats;
 class USphereComponent;
 class UCapsuleComponent;
 class UCameraComponent;
@@ -39,6 +40,7 @@ protected:
 private:
 #pragma region PrivateMethods
 	void OnMoveInput(const FInputActionValue& InputActionValue);
+	void OnJumpInput(const FInputActionValue& InputActionValue);
 	void OnPastInput(const FInputActionValue& InputActionValue);
 	void OnFutureInput(const FInputActionValue& InputActionValue);
 
@@ -48,6 +50,9 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UPPFPlayerInputConfig> m_InputConfig {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	TObjectPtr<UPpfPawnStats> m_PlayerStats {};
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> m_CameraComponent {};

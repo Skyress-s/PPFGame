@@ -31,6 +31,9 @@ public:
 	FInputActionEntry m_MoveInputEntry {};
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	FInputActionEntry m_JumpInputEntry {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	FInputActionEntry m_FutureInputEntry {};
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
