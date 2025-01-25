@@ -25,8 +25,19 @@ UCLASS(Blueprintable)
 class PPFGAME_API UPPFPlayerInputConfig : public UDataAsset {
 	GENERATED_BODY()
 public:
+	// UPROPERTY(EditDefaultsOnly, Category = "Input")
+	// TArray<FInputActionEntry> m_InputActionsEntries {};
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TArray<FInputActionEntry> m_InputActionsEntries {};
+	FInputActionEntry m_MoveInputEntry {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	FInputActionEntry m_JumpInputEntry {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	FInputActionEntry m_FutureInputEntry {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	FInputActionEntry m_PastInputEntry {};
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TArray<TObjectPtr<UInputMappingContext>> m_InputMappingContexts {};
