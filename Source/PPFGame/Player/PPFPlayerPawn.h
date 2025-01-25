@@ -8,6 +8,15 @@
 #include "PPFGame/Selection/PpfTimeEnum.h"
 #include "PPFPlayerPawn.generated.h"
 
+class UBoxComponent;
+
+enum class EWallDetectionSide : uint8
+{
+	None = 0 << 0,
+	Left = 0 << 1,
+	Right = 0 << 2,
+};
+
 class UGravityComponent;
 class UPpfPawnStats;
 class USphereComponent;
@@ -41,6 +50,7 @@ protected:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 public:
+	uint8 IsCharacterWalled();
 	bool IsCharacterGrounded();
 
 private:
@@ -48,7 +58,7 @@ private:
 	// Input
 	void OnMoveInput(const FInputActionValue& InputActionValue);
 	void OnJumpInput(const FInputActionValue& InputActionValue);
-	void TraceTest(ETimeMode TimeModeToApply);
+	void OnResetInput(const FInputActionValue& InputActionValue);
 	void OnPastInput(const FInputActionValue& InputActionValue);
 	void OnFutureInput(const FInputActionValue& InputActionValue);
 
@@ -56,6 +66,14 @@ private:
 	void HandlePhysMat();
 	void HandleMovement();
 	
+	void TraceTest(ETimeMode TimeModeToApply);
+	
+	UFUNCTION()
+	void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	void UpdateMpcHaha();
 #pragma endregion
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
@@ -76,6 +94,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Body")
 	TObjectPtr<UCapsuleComponent> m_RootCapsuleComponent {};
 
+	UPROPERTY(EditDefaultsOnly, Category = "Body")
+	TObjectPtr<UBoxComponent> m_LeftBoxQueryBox {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Body")
+	TObjectPtr<UBoxComponent> m_RightBoxQueryBox {};
+
 	// Defines the range of the character
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	TObjectPtr<USphereComponent> m_AbilitySphere {};
@@ -83,9 +107,13 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Gravity")
 	TObjectPtr<UGravityComponent> m_GravityComponent {};
 
+	UPROPERTY(EditDefaultsOnly, Category = "Art", meta = (AllowPrivateAccess = "true"))
+	UMaterialParameterCollection* m_MaterialParameterCollection {};
+
 	struct
 	{
 		float m_MoveInputX {};
 	};
 #pragma endregion
 };
+

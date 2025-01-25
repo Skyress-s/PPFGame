@@ -8,11 +8,14 @@
 #include "KismetTraceUtils.h"
 #include "PPFPlayerController.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Config/PpfPawnStats.h"
 #include "PPFGame/Input/PPFPlayerInputConfig.h"
 #include "Logging/StructuredLog.h"
+#include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 #include "PPFGame/Gravity/GravityComponent.h"
 #include "PPFGame/Selection/SelectableInterface.h"
 #include "PPFGame/Selection/SelectionUtils.h"
@@ -50,6 +53,12 @@ APPFPlayerPawn::APPFPlayerPawn()
 	m_AbilitySphere->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 
 	m_GravityComponent = CreateDefaultSubobject<UGravityComponent>(TEXT("GravityComponent"));
+
+	m_LeftBoxQueryBox = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftBoxQueryBox"));
+	m_LeftBoxQueryBox->SetupAttachment(GetRootComponent());
+
+	m_RightBoxQueryBox = CreateDefaultSubobject<UBoxComponent>(TEXT("RightBoxQueryBox"));
+	m_RightBoxQueryBox->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -75,6 +84,12 @@ void APPFPlayerPawn::BeginPlay()
 			}
 		}
 	}
+
+
+	m_RightBoxQueryBox->OnComponentBeginOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxBeginOverlap);
+	m_LeftBoxQueryBox->OnComponentBeginOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxBeginOverlap);
+	m_RightBoxQueryBox->OnComponentEndOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxEndOverlap);
+	m_LeftBoxQueryBox->OnComponentEndOverlap.AddDynamic(this, &APPFPlayerPawn::OnBoxEndOverlap);
 }
 
 // Called every frame
@@ -83,6 +98,10 @@ void APPFPlayerPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	HandlePhysMat();
 	HandleMovement();
+
+	
+
+	// IsCharacterWalled();
 }
 
 // Called to bind functionality to input
@@ -96,6 +115,7 @@ void APPFPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Triggered, this, &APPFPlayerPawn::OnMoveInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnMoveInput);
+		EnhancedInputComponent->BindAction(m_InputConfig->m_ResetInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnResetInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_JumpInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnJumpInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_FutureInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnFutureInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_PastInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnPastInput);
@@ -108,6 +128,28 @@ void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& Proper
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
+}
+
+uint8 APPFPlayerPawn::IsCharacterWalled()
+{
+	const float YExtent = m_RootCapsuleComponent->GetScaledCapsuleHalfHeight() * 0.9f;
+	const float XExtent = m_RootCapsuleComponent->GetScaledCapsuleRadius();
+	const FVector Center = GetActorLocation();
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> TraceObjectTypes;
+	TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_GameTraceChannel1));
+	TraceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+
+	const float WallDetectionDistance = m_PlayerStats->m_WallDetectionDistance;
+	TArray<AActor*> FoundActorsLeftSide {};
+	TArray<AActor*> FoundActorsRightSide {};
+	UKismetSystemLibrary::BoxOverlapActors(GetWorld(), Center + FVector(XExtent + WallDetectionDistance / 2.0f, 0, 0), FVector(m_PlayerStats->m_WallDetectionDistance/2.0f, YExtent, 0.1f), TraceObjectTypes, AActor::StaticClass(), {this}, FoundActorsLeftSide);
+	UKismetSystemLibrary::BoxOverlapActors(GetWorld(), Center - FVector(XExtent + WallDetectionDistance / 2.0f, 0, 0), FVector(m_PlayerStats->m_WallDetectionDistance/2.0f, YExtent, 0.1f), TraceObjectTypes, AActor::StaticClass(), {this}, FoundActorsRightSide);
+
+
+	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Left {Left} Right {Right}", FoundActorsLeftSide.Num(), FoundActorsRightSide.Num());
+	
+	return 1;
 }
 
 bool APPFPlayerPawn::IsCharacterGrounded()
@@ -139,12 +181,12 @@ void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 	m_MoveInputX = InputActionValue.Get<FVector2D>().X;
 
 
-	UE_LOGFMT(LogPPFPlayerPawn, Warning, "input {Input}", m_MoveInputX);
+	UE_LOGFMT(LogPPFPlayerPawn, VeryVerbose, "input {Input}", m_MoveInputX);
 }
 
 void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 {
-	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Jump input!");
+	UE_LOGFMT(LogPPFPlayerPawn, VeryVerbose, "Jump input!");
 	check(IsValid(m_PlayerStats))
 	if (IsCharacterGrounded())
 	{
@@ -152,36 +194,9 @@ void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 	}
 }
 
-void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
+void APPFPlayerPawn::OnResetInput(const FInputActionValue& InputActionValue)
 {
-	TObjectPtr<APPFPlayerController> PpfPlayerController = Cast<APPFPlayerController>(GetController());
-	FVector Direction, Location;
-	PpfPlayerController->DeprojectMousePositionToWorld(Location, Direction);
-
-	FVector FoundLocation = FMath::RayPlaneIntersection(m_CameraComponent->GetComponentLocation(), Direction, FPlane(FVector::ZeroVector, FVector::UpVector));
-
-	const FVector ToMouse = FoundLocation - GetActorLocation();
-
-#ifdef PPF_DEBUG_TRACES
-	DrawDebugBox(GetWorld(), FoundLocation, FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
-#endif
-
-	TArray<ISelectableInterface*> SelectableInterfaces = USelectionUtils::QuerySelectableObjectsInCone(*this, FVector2D(GetActorLocation()), FVector2D(ToMouse), 30.0f, 500.0f);
-	for (ISelectableInterface* const SelectableInterface : SelectableInterfaces)
-	{
-		const AActor* const FoundActor = Cast<AActor>(SelectableInterface);
-
-		const bool ValidSelect = SelectableInterface->TrySelect();
-		if (ValidSelect)
-		{
-			const ETimeMode SetTimeMode = SelectableInterface->OnSelect(TimeModeToApply);
-			m_OnUseAbility.Broadcast(FVector2D(Direction), SetTimeMode);
-		}
-
-#if PPF_DEBUG_TRACES
-		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(1000, 10, 10), FColor::Red, false, 1.f, 0, 10.0f);
-#endif
-	}
+	UE_LOGFMT(LogPPFPlayerPawn, Display, "Todo! Implement reset");
 }
 
 void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
@@ -233,4 +248,77 @@ void APPFPlayerPawn::HandleMovement()
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Acceleration {Acceleration}", Acceleration);
 
 	m_RootCapsuleComponent->AddForce(FVector(Acceleration, 0, 0), NAME_None, true);
+}
+void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
+{
+	TObjectPtr<APPFPlayerController> PpfPlayerController = Cast<APPFPlayerController>(GetController());
+	FVector Direction, Location;
+	
+	PpfPlayerController->DeprojectMousePositionToWorld(Location, Direction);
+
+	FVector FoundLocation = FMath::RayPlaneIntersection(m_CameraComponent->GetComponentLocation(), Direction, FPlane(FVector::ZeroVector, FVector::UpVector));
+
+	const FVector ToMouse = FoundLocation - GetActorLocation();
+
+#ifdef PPF_DEBUG_TRACES
+	DrawDebugBox(GetWorld(), FoundLocation, FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
+#endif
+
+	TArray<ISelectableInterface*> SelectableInterfaces = USelectionUtils::QuerySelectableObjectsInCone(*this, FVector2D(GetActorLocation()), FVector2D(ToMouse), 30.0f, 500.0f);
+	for (ISelectableInterface* const SelectableInterface : SelectableInterfaces)
+	{
+		const AActor* const FoundActor = Cast<AActor>(SelectableInterface);
+
+		const bool ValidSelect = SelectableInterface->TrySelect();
+		if (ValidSelect)
+		{
+			const ETimeMode SetTimeMode = SelectableInterface->OnSelect(TimeModeToApply);
+			m_OnUseAbility.Broadcast(FVector2D(Direction), SetTimeMode);
+		}
+
+#if PPF_DEBUG_TRACES
+		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(1000, 10, 10), FColor::Red, false, 1.f, 0, 10.0f);
+#endif
+	}
+}
+
+void APPFPlayerPawn::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	if (OtherActor == this)
+	{
+		return;
+	}
+	
+	if (OverlappedComponent == m_LeftBoxQueryBox)
+	{
+		UE_LOGFMT(LogPPFPlayerPawn, Error, "Left box overlap");
+	}
+	else if (OverlappedComponent == m_RightBoxQueryBox)
+	{
+		UE_LOGFMT(LogPPFPlayerPawn, Error, "Right box overlap");
+	}
+}
+
+void APPFPlayerPawn::OnBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor == this)
+	{
+		return;
+	}
+	
+}
+void APPFPlayerPawn::UpdateMpcHaha()
+{
+	check(IsValid(m_MaterialParameterCollection))
+	
+	TObjectPtr<APPFPlayerController> PpfPlayerController = Cast<APPFPlayerController>(GetController());
+	FVector Direction, Location;
+	
+	PpfPlayerController->DeprojectMousePositionToWorld(Location, Direction);
+
+	FVector FoundLocation = FMath::RayPlaneIntersection(m_CameraComponent->GetComponentLocation(), Direction, FPlane(FVector::ZeroVector, FVector::UpVector));
+
+	const FVector ToMouse = FoundLocation - GetActorLocation();
+	GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection)->SetVectorParameterValue("", ToMouse);
 }
