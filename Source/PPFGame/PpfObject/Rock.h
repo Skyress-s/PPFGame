@@ -7,8 +7,6 @@
 #include "PPFGame/Selection/SelectableInterface.h"
 #include "Rock.generated.h"
 
-enum class EPpfTime : uint8;
-
 UCLASS()
 class PPFGAME_API ARock : public AActor, public ISelectableInterface
 {
@@ -22,8 +20,8 @@ public:
 	// Checks if the object can be selected.
 	virtual bool TrySelect();
 
-	EPpfTime OnSelect(const EPpfTime Time);
+	EPpfTime::EType OnSelect(const EPpfTime::EType Time);
 	// ISelectableInterface END
 public:
-	EPpfTime m_CurrentPpfTime = EPpfTime::Present;
+	EPpfTime::EType m_CurrentPpfTime = EPpfTime::EType::Present;
 };

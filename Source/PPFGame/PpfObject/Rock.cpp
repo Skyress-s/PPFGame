@@ -19,11 +19,11 @@ bool ARock::TrySelect()
 	return ISelectableInterface::TrySelect();
 }
 
-EPpfTime ARock::OnSelect(const EPpfTime Time)
+EPpfTime::EType ARock::OnSelect(const EPpfTime::EType Time)
 {
 	UE_LOGFMT(LogRock, Log, "Rock Was Selected");
 
 	
-	return EPpfTime::Present;
+	return EPpfTime::EType::None;
 }
 

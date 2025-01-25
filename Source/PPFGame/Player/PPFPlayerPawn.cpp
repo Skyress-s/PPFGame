@@ -169,7 +169,7 @@ void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 		const bool ValidSelect = SelectableInterface->TrySelect();
 		if (ValidSelect)
 		{
-			SelectableInterface->OnSelect(EPpfTime::EType:: );
+			SelectableInterface->OnSelect(EPpfTime::EType::Past);
 		}
 		
 		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(1000, 10, 10), FColor::Red, false, 1.f, 0, 10.0f);

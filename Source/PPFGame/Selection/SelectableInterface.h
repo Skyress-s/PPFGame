@@ -7,8 +7,6 @@
 #include "UObject/Interface.h"
 #include "SelectableInterface.generated.h"
 
-enum class EPpfTime : uint8;
-
 // This class does not need to be modified.
 UINTERFACE()
 class USelectableInterface : public UInterface
@@ -28,5 +26,5 @@ public:
 	// Checks if the object can be selected.
 	virtual bool TrySelect(){ return false; }
 
-	EPpfTime OnSelect(const EPpfTime Time) { return EPpfTime::None; }
+	EPpfTime::EType OnSelect(const EPpfTime::EType Time) { return EPpfTime::EType::None; }
 };
