@@ -100,10 +100,6 @@ void APPFPlayerPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	HandlePhysMat();
 	HandleMovement();
-
-	
-
-	IsCharacterWalled();
 }
 
 // Called to bind functionality to input
@@ -132,6 +128,7 @@ void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& Proper
 	m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
 }
 
+UE_DISABLE_OPTIMIZATION
 uint8 APPFPlayerPawn::IsCharacterWalled()
 {
 	const float YExtent = m_RootCapsuleComponent->GetScaledCapsuleHalfHeight() * 0.9f;
@@ -150,9 +147,18 @@ uint8 APPFPlayerPawn::IsCharacterWalled()
 
 
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Left {Left} Right {Right}", FoundActorsLeftSide.Num(), FoundActorsRightSide.Num());
-	
-	return 1;
+	uint8 WallSide = 0;
+	if (!FoundActorsLeftSide.IsEmpty())
+	{
+		WallSide |= (uint8)(EWallDetectionSide::Left);
+	}
+	if (!FoundActorsRightSide.IsEmpty())
+	{
+		WallSide |= (uint8)(EWallDetectionSide::Right);
+	}
+	return WallSide;
 }
+UE_ENABLE_OPTIMIZATION
 
 bool APPFPlayerPawn::IsCharacterGrounded()
 {
@@ -190,6 +196,20 @@ void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 {
 	UE_LOGFMT(LogPPFPlayerPawn, VeryVerbose, "Jump input!");
 	check(IsValid(m_PlayerStats))
+	uint8 WallSide = IsCharacterWalled();
+	if (WallSide != 0)
+	{
+		if ((WallSide & (uint8)EWallDetectionSide::Left) == (uint8)EWallDetectionSide::Left)
+		{
+			m_RootCapsuleComponent->AddImpulse(FVector::ForwardVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+		}
+		if ((WallSide & (uint8)EWallDetectionSide::Right) == (uint8)EWallDetectionSide::Right)
+		{
+			m_RootCapsuleComponent->AddImpulse(-FVector::ForwardVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+		}
+		return;
+	}
+	
 	if (IsCharacterGrounded())
 	{
 		m_RootCapsuleComponent->AddImpulse(FVector::YAxisVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
@@ -236,10 +256,11 @@ void APPFPlayerPawn::HandleMovement()
 {
 	// Lol no data driven design in this house :)
 
-	TArray<AActor*> blabla{};
-	m_FutureDetectionHandles.GenerateKeyArray(blabla);
+	// No fucking way this actually works.
+	TArray<AActor*> SelectableActors{};
+	m_FutureDetectionHandles.GenerateKeyArray(SelectableActors);
 	FVector MaxSelectableActorVelocity = FVector::ZeroVector;
-	for (AActor* EnterFutureActor : blabla)
+	for (AActor* EnterFutureActor : SelectableActors)
 	{
 		UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(EnterFutureActor->GetRootComponent());
 		if (IsValid(PrimitiveComponent))
