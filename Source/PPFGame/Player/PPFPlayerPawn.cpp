@@ -122,7 +122,7 @@ void APPFPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Triggered, this, &APPFPlayerPawn::OnMoveInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_MoveInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnMoveInput);
-		EnhancedInputComponent->BindAction(m_InputConfig->m_ScrollInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnScrollInput);
+		EnhancedInputComponent->BindAction(m_InputConfig->m_ScrollInputEntry.m_InputAction, ETriggerEvent::Started, this, &APPFPlayerPawn::OnScrollInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_ResetInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnResetInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_JumpInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnJumpInput);
 		EnhancedInputComponent->BindAction(m_InputConfig->m_FutureInputEntry.m_InputAction, ETriggerEvent::Completed, this, &APPFPlayerPawn::OnFutureInput);
@@ -211,7 +211,7 @@ void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 void APPFPlayerPawn::OnScrollInput(const FInputActionValue& InputActionValue)
 {
 	FVector test = m_CameraComponent->GetRelativeLocation();
-	test.Z += InputActionValue.Get<float>() * m_PlayerStats->m_ZoomAmount;
+	test.Y += InputActionValue.Get<float>() * m_PlayerStats->m_ZoomAmount;
 	m_CameraComponent->SetRelativeLocation(test);
 }
 
