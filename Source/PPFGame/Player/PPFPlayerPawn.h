@@ -93,6 +93,8 @@ private:
 	
 	void UsePpfAbility(ETimeMode TimeModeToApply);
 
+	void UpdatePlayerInfo();
+	
 	void OnAdjecentObjectEnterFuture(const FVector& Vector);
 	UFUNCTION()
 	void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
