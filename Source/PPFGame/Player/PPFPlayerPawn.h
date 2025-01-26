@@ -82,6 +82,7 @@ private:
 #pragma region PrivateMethods
 	// Input
 	void OnMoveInput(const FInputActionValue& InputActionValue);
+	void OnScrollInput(const FInputActionValue& InputActionValue);
 	void OnJumpInput(const FInputActionValue& InputActionValue);
 	void OnResetInput(const FInputActionValue& InputActionValue);
 	void OnPastInput(const FInputActionValue& InputActionValue);

@@ -36,6 +36,9 @@ public:
 	FInputActionEntry m_ResetInputEntry {};
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	FInputActionEntry m_ScrollInputEntry {};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	FInputActionEntry m_FutureInputEntry {};
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
