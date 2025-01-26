@@ -106,20 +106,9 @@ void APPFPlayerPawn::Tick(float DeltaTime)
 	HandleMovement();
 	UpdateMpcHaha();
 
-	if (IsCharacterWalled())
-	{
-		m_PlayerInfo.m_PlayerState = EPlayerState::OnWall;
-	}
-	else if (IsCharacterGrounded())
-	{
-		m_PlayerInfo.m_PlayerState = EPlayerState::Grounded;
-	}
-	else
-	{
-		m_PlayerInfo.m_PlayerState = EPlayerState::InAir;
-	}
+	UpdatePlayerInfo();
 
-	m_PlayerInfo.m_Velocity = FVector2D(m_RootCapsuleComponent->GetPhysicsLinearVelocity());
+	
 }
 
 // Called to bind functionality to input
@@ -355,6 +344,25 @@ void APPFPlayerPawn::UsePpfAbility(const ETimeMode TimeModeToApply)
 	}
 }
 
+void APPFPlayerPawn::UpdatePlayerInfo()
+{
+	if (IsCharacterWalled())
+	{
+		m_PlayerInfo.m_PlayerState = EPlayerState::OnWall;
+	}
+	else if (IsCharacterGrounded())
+	{
+		m_PlayerInfo.m_PlayerState = EPlayerState::Grounded;
+	}
+	else
+	{
+		m_PlayerInfo.m_PlayerState = EPlayerState::InAir;
+	}
+
+	m_PlayerInfo.m_Velocity = FVector2D(m_RootCapsuleComponent->GetPhysicsLinearVelocity());
+}
+
+
 void APPFPlayerPawn::OnAdjecentObjectEnterFuture(const FVector& Vector)
 {
 	m_RootCapsuleComponent->AddImpulse(Vector * 1.0f, NAME_None, true);
@@ -428,6 +436,7 @@ void APPFPlayerPawn::UpdateMpcHaha()
 		Angle += 360.0f;
 	}
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Angle {Angle}", Angle);
-
-	GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection)->SetScalarParameterValue("AimAngle", Angle);
+	UMaterialParameterCollectionInstance* const MPC = GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection);
+	MPC->SetScalarParameterValue("AimAngle", Angle);
+	MPC->SetScalarParameterValue("PlayerMovementX", m_PlayerInfo.m_Velocity.X);
 }
