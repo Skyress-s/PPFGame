@@ -322,7 +322,7 @@ void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 			m_OnUseAbility.Broadcast(FVector2D(Direction), SetTimeMode);
 		}
 
-#if PPF_DEBUG_TRACES
+#ifdef PPF_DEBUG_TRACES
 		DrawDebugBox(GetWorld(), FoundActor->GetActorLocation(), FVector(1000, 10, 10), FColor::Red, false, 1.f, 0, 10.0f);
 #endif
 	}
