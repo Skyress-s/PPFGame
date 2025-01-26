@@ -136,8 +136,8 @@ void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& Proper
 
 	// m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
 }
+#endif
 
-UE_DISABLE_OPTIMIZATION
 
 uint8 APPFPlayerPawn::IsCharacterWalled()
 {
@@ -173,7 +173,6 @@ uint8 APPFPlayerPawn::IsCharacterWalled()
 	return WallSide;
 }
 
-UE_ENABLE_OPTIMIZATION
 
 bool APPFPlayerPawn::IsCharacterGrounded()
 {
@@ -198,7 +197,6 @@ bool APPFPlayerPawn::IsCharacterGrounded()
 
 	return HitResult.bBlockingHit;
 }
-#endif
 
 void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 {
@@ -438,5 +436,5 @@ void APPFPlayerPawn::UpdateMpcHaha()
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Angle {Angle}", Angle);
 	UMaterialParameterCollectionInstance* const MPC = GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection);
 	MPC->SetScalarParameterValue("AimAngle", Angle);
-	MPC->SetScalarParameterValue("PlayerMovementX", m_PlayerInfo.m_Velocity.X);
+	MPC->SetScalarParameterValue("PlayerMovementX", m_PlayerInfo.MoveInputX);
 }
