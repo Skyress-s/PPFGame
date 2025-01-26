@@ -67,7 +67,7 @@ private:
 	void HandlePhysMat();
 	void HandleMovement();
 	
-	void TraceTest(ETimeMode TimeModeToApply);
+	void UsePpfAbility(ETimeMode TimeModeToApply);
 
 	void OnAdjecentObjectEnterFuture(const FVector& Vector);
 	UFUNCTION()
