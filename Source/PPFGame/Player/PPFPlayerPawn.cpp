@@ -78,6 +78,8 @@ void APPFPlayerPawn::BeginPlay()
 	check(IsValid(PpfPlayerController))
 	PpfPlayerController->bShowMouseCursor = true;
 
+	GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection)->SetScalarParameterValue("AbilityWidth", m_PlayerStats->m_ScanDegrees);
+	
 	//Add Input Mapping Context
 	check(IsValid(m_InputConfig))
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -234,13 +236,13 @@ void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Past input!");
 
 
-	TraceTest(ETimeMode::Past);
+	UsePpfAbility(ETimeMode::Past);
 }
 
 void APPFPlayerPawn::OnFutureInput(const FInputActionValue& InputActionValue)
 {
 	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Future input!");
-	TraceTest(ETimeMode::Future);
+	UsePpfAbility(ETimeMode::Future);
 }
 
 void APPFPlayerPawn::HandlePhysMat()
@@ -294,7 +296,7 @@ void APPFPlayerPawn::HandleMovement()
 	m_RootCapsuleComponent->AddForce(FVector(Acceleration, 0, 0), NAME_None, true);
 	// m_RootCapsuleComponent->AddForce(FVector(-m_MoveInputX * m_PlayerStats->m_MovementAcceleration * 2, 0, 0), NAME_None, true);
 }
-void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
+void APPFPlayerPawn::UsePpfAbility(const ETimeMode TimeModeToApply)
 {
 	TObjectPtr<APPFPlayerController> PpfPlayerController = Cast<APPFPlayerController>(GetController());
 	FVector Direction, Location;
@@ -305,6 +307,7 @@ void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 
 	const FVector ToMouse = FoundLocation - GetActorLocation();
 
+	m_OnUseAbility.Broadcast(FVector2D(Direction), TimeModeToApply);
 
 #ifdef PPF_DEBUG_TRACES
 	DrawDebugBox(GetWorld(), FoundLocation, FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
@@ -319,7 +322,6 @@ void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 		if (ValidSelect)
 		{
 			const ETimeMode SetTimeMode = SelectableInterface->OnSelect(TimeModeToApply);
-			m_OnUseAbility.Broadcast(FVector2D(Direction), SetTimeMode);
 		}
 
 #ifdef PPF_DEBUG_TRACES
