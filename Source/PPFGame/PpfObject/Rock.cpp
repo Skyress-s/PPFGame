@@ -44,7 +44,7 @@ void ARock::Tick(float DeltaSeconds)
 	if (m_CurrentTimeMode == ETimeMode::Future)
 	{
 		m_PastPositionsAndVelocities.Emplace(GetActorLocation(), m_RootBoxComponent->GetPhysicsLinearVelocity());
-		if (m_PastPositionsAndVelocities.Num() > 500)
+		if (m_PastPositionsAndVelocities.Num() > 1500)
 		{
 			m_PastPositionsAndVelocities.RemoveAt(0);
 		}
