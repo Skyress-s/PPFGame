@@ -436,5 +436,5 @@ void APPFPlayerPawn::UpdateMpcHaha()
 	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Angle {Angle}", Angle);
 	UMaterialParameterCollectionInstance* const MPC = GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection);
 	MPC->SetScalarParameterValue("AimAngle", Angle);
-	MPC->SetScalarParameterValue("PlayerMovementX", m_PlayerInfo.m_Velocity.X);
+	MPC->SetScalarParameterValue("PlayerMovementX", m_PlayerInfo.MoveInputX);
 }
