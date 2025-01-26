@@ -128,7 +128,7 @@ void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& Proper
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
-	m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
+	// m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
 }
 
 UE_DISABLE_OPTIMIZATION
