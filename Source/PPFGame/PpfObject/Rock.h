@@ -23,6 +23,8 @@ public:
 	// Sets default values for this actor's properties
 	ARock();
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 	// ISelectableInterface START
 public:
 	// Checks if the object can be selected.
@@ -55,4 +57,6 @@ private:
 	ETimeMode m_CurrentTimeMode = ETimeMode::Present;
 	UPROPERTY(EditAnywhere, Category = "Velocity", meta = (AllowPrivateAccess = "true"))
 	FVector m_VelocityEnLeaveFuture = FVector::ZeroVector;
+
+	TArray<TPair<FVector, FVector>> m_PastPositionsAndVelocities {};
 };

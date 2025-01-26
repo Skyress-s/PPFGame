@@ -3,6 +3,7 @@
 
 #include "WinTirggerBox.h"
 
+#include "Logging/StructuredLog.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Player/PPFPlayerPawn.h"
 
@@ -30,6 +31,8 @@ void AWinTirggerBox::NotifyActorBeginOverlap(AActor* OtherActor)
 		return;
 	}
 
+	UE_LOGFMT(LogTemp, Error, "Player Overlap Win Trigger Box");
+	
 	FVector2D ScreenPosition;
 	GetWorld()->GetFirstPlayerController()->ProjectWorldLocationToScreen(OtherActor->GetActorLocation(), ScreenPosition);
 	

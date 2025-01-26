@@ -16,6 +16,7 @@ ARock::ARock()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickGroup = TG_EndPhysics;
 	m_RootBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("RootBoxComponent"));
 	m_RootBoxComponent->SetSimulatePhysics(true);
 	m_RootBoxComponent->SetEnableGravity(false);
@@ -35,6 +36,33 @@ void ARock::BeginPlay()
 {
 	Super::BeginPlay();
 	EnterToPresentTimeMode();
+}
+
+void ARock::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if (m_CurrentTimeMode == ETimeMode::Future)
+	{
+		m_PastPositionsAndVelocities.Emplace(GetActorLocation(), m_RootBoxComponent->GetPhysicsLinearVelocity());
+		if (m_PastPositionsAndVelocities.Num() > 500)
+		{
+			m_PastPositionsAndVelocities.RemoveAt(0);
+		}
+	}
+	if (m_CurrentTimeMode == ETimeMode::Past)
+	{
+		if (m_PastPositionsAndVelocities.Num() > 0)
+		{
+			TPair<FVector, FVector> PastPositionAndVelocity = m_PastPositionsAndVelocities.Pop();
+			m_RootBoxComponent->SetPhysicsLinearVelocity(-PastPositionAndVelocity.Value);
+			// SetActorLocation(PastPositionAndVelocity.Key);
+			m_VelocityEnLeaveFuture = PastPositionAndVelocity.Value;
+		}
+		else
+		{
+			m_RootBoxComponent->SetSimulatePhysics(false);
+		}
+	}
 }
 
 bool ARock::TrySelect()
@@ -79,6 +107,8 @@ ETimeMode ARock::OnSelect(const ETimeMode Time)
 
 void ARock::EnterToPastTimeMode()
 {
+	
+	m_RootBoxComponent->SetSimulatePhysics(true);
 }
 
 void ARock::EnterToPresentTimeMode()
