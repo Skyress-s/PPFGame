@@ -18,6 +18,30 @@ enum class EWallDetectionSide : uint8
 	Right = 1 << 2,
 };
 
+
+UENUM(BlueprintType)
+enum class EPlayerState : uint8
+{
+	Grounded UMETA(DisplayName = "Grounded"),
+	InAir UMETA(DisplayName = "InAir"),
+	OnWall UMETA(DisplayName = "OnWall"),
+};
+
+USTRUCT(BlueprintType)
+struct FPlayerInfo
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector2D m_Velocity {};
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MoveInputX {};
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EPlayerState m_PlayerState {};
+};
+
 class UGravityComponent;
 class UPpfPawnStats;
 class USphereComponent;
@@ -67,7 +91,7 @@ private:
 	void HandlePhysMat();
 	void HandleMovement();
 	
-	void TraceTest(ETimeMode TimeModeToApply);
+	void UsePpfAbility(ETimeMode TimeModeToApply);
 
 	void OnAdjecentObjectEnterFuture(const FVector& Vector);
 	UFUNCTION()
@@ -117,6 +141,9 @@ private:
 
 	// todo This is very memory safe. Because i have hope.
 	TMap<AActor*, FDelegateHandle> m_FutureDetectionHandles {};
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PlayerInfo", meta = (AllowPrivateAccess = "true"))
+	FPlayerInfo m_PlayerInfo {};
 
 	struct
 	{
