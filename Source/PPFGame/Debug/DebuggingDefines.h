@@ -2,4 +2,4 @@
 
 #pragma once
 
-#define PPF_DEBUG_TRACES 1
+// #define PPF_DEBUG_TRACES 0

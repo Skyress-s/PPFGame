@@ -307,7 +307,7 @@ void APPFPlayerPawn::TraceTest(const ETimeMode TimeModeToApply)
 	DrawDebugBox(GetWorld(), FoundLocation, FVector(10, 10, 10), FColor::Red, true, 4.f, 0, 10.0f);
 #endif
 
-	TArray<ISelectableInterface*> SelectableInterfaces = USelectionUtils::QuerySelectableObjectsInCone(*this, FVector2D(GetActorLocation()), FVector2D(ToMouse), 30.0f, 500.0f);
+	TArray<ISelectableInterface*> SelectableInterfaces = USelectionUtils::QuerySelectableObjectsInCone(*this, FVector2D(GetActorLocation()), FVector2D(ToMouse), m_PlayerStats->m_ScanDegrees, m_AbilitySphere->GetScaledSphereRadius());
 	for (ISelectableInterface* const SelectableInterface : SelectableInterfaces)
 	{
 		const AActor* const FoundActor = Cast<AActor>(SelectableInterface);
