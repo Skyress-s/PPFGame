@@ -136,8 +136,8 @@ void APPFPlayerPawn::PostEditChangeProperty(struct FPropertyChangedEvent& Proper
 
 	// m_AbilitySphere->SetRelativeScale3D(FVector::OneVector);
 }
+#endif
 
-UE_DISABLE_OPTIMIZATION
 
 uint8 APPFPlayerPawn::IsCharacterWalled()
 {
@@ -173,7 +173,6 @@ uint8 APPFPlayerPawn::IsCharacterWalled()
 	return WallSide;
 }
 
-UE_ENABLE_OPTIMIZATION
 
 bool APPFPlayerPawn::IsCharacterGrounded()
 {
@@ -198,7 +197,6 @@ bool APPFPlayerPawn::IsCharacterGrounded()
 
 	return HitResult.bBlockingHit;
 }
-#endif
 
 void APPFPlayerPawn::OnMoveInput(const FInputActionValue& InputActionValue)
 {

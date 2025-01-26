@@ -33,13 +33,13 @@ struct FPlayerInfo
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector2D m_Velocity {};
+	FVector2D m_Velocity = FVector2D::ZeroVector;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MoveInputX {};
+	float MoveInputX = 0.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EPlayerState m_PlayerState {};
+	EPlayerState m_PlayerState  = EPlayerState::Grounded;
 };
 
 class UGravityComponent;
