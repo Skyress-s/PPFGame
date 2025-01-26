@@ -401,7 +401,7 @@ void APPFPlayerPawn::UpdateMpcHaha()
 	{
 		Angle += 360.0f;
 	}
-	UE_LOGFMT(LogPPFPlayerPawn, Warning, "Angle {Angle}", Angle);
+	// UE_LOGFMT(LogPPFPlayerPawn, Warning, "Angle {Angle}", Angle);
 	
 	GetWorld()->GetParameterCollectionInstance(m_MaterialParameterCollection)->SetScalarParameterValue("AimAngle", Angle);
 }
