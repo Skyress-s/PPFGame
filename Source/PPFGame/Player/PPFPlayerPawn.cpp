@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Config/PpfPawnStats.h"
+#include "Kismet/GameplayStatics.h"
 #include "PPFGame/Input/PPFPlayerInputConfig.h"
 #include "Logging/StructuredLog.h"
 #include "Materials/MaterialParameterCollection.h"
@@ -224,6 +225,8 @@ void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 void APPFPlayerPawn::OnResetInput(const FInputActionValue& InputActionValue)
 {
 	UE_LOGFMT(LogPPFPlayerPawn, Display, "Todo! Implement reset");
+	FName MapName = FName(GetWorld()->GetMapName());
+	UGameplayStatics::OpenLevel(this, MapName);
 }
 
 void APPFPlayerPawn::OnPastInput(const FInputActionValue& InputActionValue)
