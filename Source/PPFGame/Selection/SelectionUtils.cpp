@@ -6,11 +6,13 @@
 #include "PPFGame/Debug/DebuggingDefines.h"
 #include "SelectableInterface.h"
 
-TArray<ISelectableInterface*> USelectionUtils::QuerySelectableObjectsInCone(const UObject& WorldContextObject, const FVector2D& Location, const FVector2D& Direction,
+TArray<ISelectableInterface*> USelectionUtils::QuerySelectableObjectsInCone(const UObject& WorldContextObject, const FVector2D& Location, FVector2D Direction,
                                                                             const float Degrees, const float Range)
 {
 	TArray<ISelectableInterface*> SelectableObjectsFound;
 
+	Direction.Normalize();
+	
 	const uint8 NumTraces {10};
 	
 	FVector test = FVector(Direction, 0);

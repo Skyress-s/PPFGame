@@ -7,6 +7,7 @@
 #include "PPFGame/Selection/SelectableInterface.h"
 #include "Rock.generated.h"
 
+class UPresentIndicator;
 class UFutureNotifier;
 class UGravityComponent;
 class UBoxComponent;
@@ -44,6 +45,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Gravity")
 	TObjectPtr<UGravityComponent> m_GravityComponent {};
+	
+	UPROPERTY(EditAnywhere, Category = "Indication")
+	TObjectPtr<UPresentIndicator> m_IndicatorStaticMeshComp {};
 	
 	UPROPERTY(EditAnywhere, Category = "FutureNotifier")
 	TObjectPtr<UFutureNotifier> m_FutureNotifier {};

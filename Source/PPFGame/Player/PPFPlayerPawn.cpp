@@ -205,12 +205,12 @@ void APPFPlayerPawn::OnJumpInput(const FInputActionValue& InputActionValue)
 		if ((WallSide & (uint8)EWallDetectionSide::Left) == (uint8)EWallDetectionSide::Left)
 		{
 			const FVector WallJumpVector = (-FVector::ForwardVector + FVector::YAxisVector).GetSafeNormal();
-			m_RootCapsuleComponent->AddImpulse(WallJumpVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+			m_RootCapsuleComponent->AddImpulse(WallJumpVector * m_PlayerStats->m_WallJumpSpeed, NAME_None, true);
 		}
 		if ((WallSide & (uint8)EWallDetectionSide::Right) == (uint8)EWallDetectionSide::Right)
 		{
 			const FVector WallJumpVector = (FVector::ForwardVector + FVector::YAxisVector).GetSafeNormal();
-			m_RootCapsuleComponent->AddImpulse(WallJumpVector * m_PlayerStats->m_JumpSpeed, NAME_None, true);
+			m_RootCapsuleComponent->AddImpulse(WallJumpVector * m_PlayerStats->m_WallJumpSpeed, NAME_None, true);
 		}
 		
 		return;

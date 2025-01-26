@@ -19,6 +19,9 @@ class PPFGAME_API UPpfPawnStats : public UDataAsset
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0.0"))
 	float m_JumpSpeed{1000.0f};
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0.0"))
+	float m_WallJumpSpeed{1500.0f};
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stats", meta = (ClampMin = "0.0"))
 	float m_GroundCheckDistance = 50.0f;

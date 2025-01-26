@@ -16,6 +16,6 @@ class PPFGAME_API USelectionUtils : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	static TArray<ISelectableInterface*> QuerySelectableObjectsInCone(const UObject& WorldContextObject, const FVector2D& Location, const FVector2D& Direction,
+	static TArray<ISelectableInterface*> QuerySelectableObjectsInCone(const UObject& WorldContextObject, const FVector2D& Location, FVector2D Direction,
 	                                                                  const float Degrees, const float Range);
 };

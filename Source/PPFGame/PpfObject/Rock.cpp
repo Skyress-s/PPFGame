@@ -4,6 +4,7 @@
 #include "Rock.h"
 
 #include "FutureNotifier.h"
+#include "PresentIndicator.h"
 #include "Components/BoxComponent.h"
 #include "Logging/StructuredLog.h"
 #include "PPFGame/Gravity/GravityComponent.h"
@@ -25,6 +26,9 @@ ARock::ARock()
 	m_FutureNotifier = CreateDefaultSubobject<UFutureNotifier>(TEXT("FutureNotifier"));
 
 	m_GravityComponent = CreateDefaultSubobject<UGravityComponent>(TEXT("GravityComponent"));
+
+	m_IndicatorStaticMeshComp = CreateDefaultSubobject<UPresentIndicator>(TEXT("PresentIndicator"));
+	m_IndicatorStaticMeshComp->SetupAttachment(GetRootComponent());
 }
 
 void ARock::BeginPlay()
@@ -80,7 +84,8 @@ void ARock::EnterToPastTimeMode()
 void ARock::EnterToPresentTimeMode()
 {
 	m_RootBoxComponent->SetSimulatePhysics(false);
-	
+	m_IndicatorStaticMeshComp->NotifyOfVector(m_VelocityEnLeaveFuture);
+	m_IndicatorStaticMeshComp->Enable();
 }
 
 void ARock::EnterToFutureTimeMode()
@@ -96,6 +101,7 @@ void ARock::LeavePastTimeMode()
 
 void ARock::LeavePresentTimeMode()
 {
+	m_IndicatorStaticMeshComp->Disable();
 }
 
 void ARock::LeaveFutureTimeMode()
